@@ -134,6 +134,12 @@ int MainWindow::ConvertToPrg()
                     fblog->add(msg);
                     sprintf(msg, "@C1@s%s", buffer);
                     fblog->add(msg);
+                    
+                    // delete file
+                    fclose(fprg);
+                    fclose(f);
+                    free(buffer);
+                    if(std::remove(prgfile.c_str())==0) fblog->add("@s@iHatalı PRG dosyası silindi"); else fblog->add("@s@iHatalı PRG dosya silme başarısız");
                     fblog->add("@_");
                     return 0;
                 }
