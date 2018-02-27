@@ -130,7 +130,7 @@ int MainWindow::ConvertToPrg()
                 {
                     sprintf(msg, "@C1@s@i%s",chooser.value());
                     fblog->add(msg);
-                    sprintf(msg, "@C1@s%d. satırda hatalı kodlama!",totalbyte/8);
+                    sprintf(msg, "@C1@s%d. satırda hatalı kodlama!",1+totalbyte/8);
                     fblog->add(msg);
                     sprintf(msg, "@C1@s%s", buffer);
                     fblog->add(msg);
