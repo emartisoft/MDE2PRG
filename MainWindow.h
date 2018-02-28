@@ -29,10 +29,11 @@ class MainWindow : public AmigaWindow
 public:
     MainWindow();
     ~MainWindow();
+    int handle(int event);
 private:
     Fl_Browser *fblog;
     unsigned int hex2dec(const std::string& hex_text);
-    int ConvertToPrg();
+    int ConvertToPrg(const char* filename);
     void InitializeComponents();
     void draw();
     static void st_bConvertEvent(Fl_Widget* w,void* data);

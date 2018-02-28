@@ -6,8 +6,9 @@
 
 #include "MainWindow.h"
 #include "pic.xpm"
+#define SURUM "1.02"
 
-MainWindow::MainWindow() : AmigaWindow(100,100,680,360,"MDE2PRG 1.0")
+MainWindow::MainWindow() : AmigaWindow(100,100,680,360,"MDE2PRG")
 {
     InitializeComponents();
 }
@@ -40,33 +41,21 @@ unsigned int MainWindow::hex2dec(const std::string& hex_text)
     return value;
 }
 
-int MainWindow::ConvertToPrg()
+int MainWindow::ConvertToPrg(const char* filename)
 {
     int totalbyte=0;
     int size = 1024, pos;
     int c;
     char *buffer = (char *)malloc(size);
     char msg[1024];
-
     bool bStartAddr;
 
-    Fl_File_Chooser chooser(".",                        // directory
-                            "*",                        // filter
-                            Fl_File_Chooser::SINGLE,    // chooser type
-                            "MDE Formatlı Dosya Seçimi");        // title
-    chooser.show();
 
-    while(chooser.shown())
-        { Fl::wait(); }
-
-    if ( chooser.value() == NULL )
-        { return 2; }
-
-    std::string prgfile= std::string(chooser.value());
+    std::string prgfile= std::string(filename);
     prgfile.append(".prg");
 
     FILE *fprg = fopen(prgfile.c_str(), "wb");
-    FILE *f = fopen(chooser.value(), "r");
+    FILE *f = fopen(filename, "r");
     if(f && fprg)
     {
       bStartAddr=true;
@@ -128,19 +117,20 @@ int MainWindow::ConvertToPrg()
                 }
                 else
                 {
-                    sprintf(msg, "@C1@s@i%s",chooser.value());
+                    sprintf(msg, "@C1@s@i%s",filename);
                     fblog->add(msg);
                     sprintf(msg, "@C1@s%d. satırda hatalı kodlama!",1+totalbyte/8);
                     fblog->add(msg);
                     sprintf(msg, "@C1@s%s", buffer);
                     fblog->add(msg);
-                    
+
                     // delete file
                     fclose(fprg);
                     fclose(f);
                     free(buffer);
                     if(std::remove(prgfile.c_str())==0) fblog->add("@s@iHatalı PRG dosyası silindi"); else fblog->add("@s@iHatalı PRG dosya silme başarısız");
                     fblog->add("@_");
+                    fblog->bottomline(fblog->size());
                     return 0;
                 }
         }
@@ -153,7 +143,6 @@ int MainWindow::ConvertToPrg()
       sprintf(msg, "@b@sBoyutu: %d bytes\n", totalbyte);
       fblog->add(msg);
       fblog->add("@_");
-
     }
     else
     {
@@ -161,6 +150,7 @@ int MainWindow::ConvertToPrg()
         fblog->add("@_");
     }
     free(buffer);
+    fblog->bottomline(fblog->size());
     return 1;
 }
 
@@ -171,7 +161,17 @@ void MainWindow::st_bConvertEvent(Fl_Widget* w,void* data)
 
 inline void MainWindow::bConvertEvent(Fl_Widget *w)
 {
-    ConvertToPrg();
+    Fl_File_Chooser chooser(".",                        // directory
+                            "*",                        // filter
+                            Fl_File_Chooser::SINGLE,    // chooser type
+                            "MDE Formatlı Dosya Seçimi");        // title
+    chooser.show();
+
+    while(chooser.shown())
+        { Fl::wait(); }
+
+    if ( chooser.value() != NULL )
+        ConvertToPrg(chooser.value());
 }
 
 void MainWindow::st_bAboutEvent(Fl_Widget* w,void* data)
@@ -181,9 +181,10 @@ void MainWindow::st_bAboutEvent(Fl_Widget* w,void* data)
 
 inline void MainWindow::bAboutEvent(Fl_Widget *w)
 {
+    fblog->clear();
     fblog->add("@bMDE2PRG");
     fblog->add("@C4@fCoded by emarti, Murat Özdemir");
-    fblog->add("@s@iFreeware (c) 2018, Sürüm 1.0");
+    fblog->add("@s@iFreeware (c) 2018, Sürüm "SURUM);
     fblog->add("@s@iFor Linux & Windows");
     fblog->add("@s@iPowered by FLTK (Fast Light Toolkit)");
     fblog->add("@s@iWeb: https://github.com/emartisoft/MDE2PRG");
@@ -208,4 +209,24 @@ void MainWindow::InitializeComponents()
 
     fblog = new Fl_Browser(330,130,330,200);
     bAboutEvent(fblog);
+
+    char* progname = "MDE2PRG "SURUM;
+    this->setTitle(progname);
+}
+
+int MainWindow::handle(int event)
+{
+    int ret = AmigaWindow::handle(event);
+    switch ( event ) {
+      case FL_DND_ENTER:
+      case FL_DND_DRAG:
+      case FL_DND_RELEASE:
+            ret = 1;
+        break;
+      case FL_PASTE:
+            ConvertToPrg(Fl::event_text());
+            ret = 1;
+        break;
+    }
+    return(ret);
 }
